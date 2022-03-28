@@ -2,12 +2,11 @@ package com.example.powiatypolski
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.util.Log
 
 class Coordinates
 {
-    val coordinates : Map<String, Map<String, Data>>
-    private val shuffled : MutableList<String>
+    private val coordinates : Map<String, Map<String, Data>>
+    private var shuffled : Map<String, MutableList<String>>
     private var pos = 0
     private var wojewodztwo = "małopolskie"
 
@@ -32,64 +31,90 @@ class Coordinates
                 "mazowieckie" to Mazowieckie(),
         )
 
-
-        shuffled = coordinates[wojewodztwo]!!.keys.toMutableList()
-        shuffled.shuffle()
+        shuffled = mapOf(
+                "małopolskie" to coordinates["małopolskie"]!!.keys.shuffled().toMutableList(),
+                "podkarpackie" to coordinates["podkarpackie"]!!.keys.shuffled().toMutableList(),
+                "świętokrzyskie" to coordinates["świętokrzyskie"]!!.keys.shuffled().toMutableList(),
+                "śląskie" to coordinates["śląskie"]!!.keys.shuffled().toMutableList(),
+                "opolskie" to coordinates["opolskie"]!!.keys.shuffled().toMutableList(),
+                "dolnośląskie" to coordinates["dolnośląskie"]!!.keys.shuffled().toMutableList(),
+                "lubuskie" to coordinates["lubuskie"]!!.keys.shuffled().toMutableList(),
+                "zachodniopomorskie" to coordinates["zachodniopomorskie"]!!.keys.shuffled().toMutableList(),
+                "pomorskie" to coordinates["pomorskie"]!!.keys.shuffled().toMutableList(),
+                "warmińsko-mazurskie" to coordinates["warmińsko-mazurskie"]!!.keys.shuffled().toMutableList(),
+                "podlaskie" to coordinates["podlaskie"]!!.keys.shuffled().toMutableList(),
+                "lubelskie" to coordinates["lubelskie"]!!.keys.shuffled().toMutableList(),
+                "kujawsko-pomorskie" to coordinates["kujawsko-pomorskie"]!!.keys.shuffled().toMutableList(),
+                "łódzkie" to coordinates["łódzkie"]!!.keys.shuffled().toMutableList(),
+                "wielkopolskie" to coordinates["wielkopolskie"]!!.keys.shuffled().toMutableList(),
+                "mazowieckie" to coordinates["mazowieckie"]!!.keys.shuffled().toMutableList(),
+        )
     }
 
-    fun getItem() : Item{
-        
-        if (shuffled.isEmpty())
-            return Item("", Point(0, 0), false)
+    fun getListOfWojewodztw() : List<String> {
+        return coordinates.keys.toList()
+    }
 
-        if (pos >= shuffled.size)
+    fun setWojewodztwo(wojewodztwo : String) {
+        this.wojewodztwo = wojewodztwo
+        pos = 0
+    }
+
+    fun getItem() : String{
+        
+        if (shuffled[this.wojewodztwo]!!.isEmpty())
+            return "Finished"
+
+        if (pos >= shuffled[this.wojewodztwo]!!.size)
             pos = 0
 
-        val powiat = shuffled[pos]
+        return shuffled[this.wojewodztwo]!![pos]
         
-        return Item("$powiat\n${coordinates[wojewodztwo]!![powiat]!!.wojewodztwo}", coordinates[wojewodztwo]!![powiat]!!.coordinates[0], true)
+        //return "$powiat\n${coordinates[wojewodztwo]!![powiat]!!.wojewodztwo}"
     }
 
-    fun deleteItem() : Boolean {
-        shuffled.remove(shuffled[pos])
-
-        return shuffled.isEmpty()
+    fun deleteItem() {
+        shuffled[this.wojewodztwo]!!.remove(shuffled[this.wojewodztwo]!![pos])
     }
 
     fun skip() {
         pos++
 
-        if (pos >= shuffled.size)
+        if (pos >= shuffled[this.wojewodztwo]!!.size)
             pos = 0
     }
 
+    fun isEmpty() : Boolean{
+        return shuffled[this.wojewodztwo]!!.isEmpty()
+    }
+
     fun getDpiPoint(scale : Float) : MutableList<Point>{
+
         val points : MutableList<Point> = mutableListOf()
 
-        for (point : Point in coordinates[wojewodztwo]!![shuffled[pos]]!!.coordinates) {
-            val offset: Point = coordinates[wojewodztwo]!![shuffled[pos]]!!.offset
-            val x : Int = ((point.X / scale).toInt() + offset.X) / Global.granularity * Global.granularity
-            val y : Int = ((point.Y / scale).toInt() + offset.Y) / Global.granularity * Global.granularity
+        for (point : Point in coordinates[wojewodztwo]!![shuffled[this.wojewodztwo]!![pos]]!!.coordinates) {
+            val offset: Point = coordinates[wojewodztwo]!![shuffled[this.wojewodztwo]!![pos]]!!.offset
+            val x : Int = Global.calc(point.X, offset.X)  //((point.X / scale).toInt() + offset.X) / Global.granularity * Global.granularity
+            val y : Int = Global.calc(point.Y, offset.Y)  //((point.Y / scale).toInt() + offset.Y) / Global.granularity * Global.granularity
             points.add(Point(x, y))
         }
 
         return points
     }
 
+
+
     fun testCalibration(bmp : Bitmap, scale : Float) {
 
-        for (data : Data in coordinates[wojewodztwo]!!.values) {
-
-            val doublePoints : Array<Point> = data.coordinates
-
-            for (doublePoint : Point in doublePoints) {
-                val x = (doublePoint.X / scale).toInt() + data.offset.X
-                val y = (doublePoint.Y / scale).toInt() + data.offset.Y
-                for (i in 0..5)
-                    for (j in 0..5)
-                        bmp.setPixel(x + i, y + j, Color.RED)
-            }
-        }
+        for (wojewodztwo : Map<String, Data> in coordinates.values)
+            for (powiat : Data in wojewodztwo.values)
+                for (doublePoint : Point in powiat.coordinates) {
+                    val x = Global.calc(doublePoint.X, powiat.offset.X)
+                    val y = Global.calc(doublePoint.Y, powiat.offset.Y)
+                    for (i in 0..5)
+                        for (j in 0..5)
+                            bmp.setPixel(x + i, y + j, Color.RED)
+                }
     }
 
     private fun Malopolska() : Map<String, Data>

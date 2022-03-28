@@ -8,17 +8,17 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
     private var coordinates : Coordinates? = null
     private var toBeResetAtNextClick = false
     private var magicFill : MagicFill? = null
-
-    private var logCounter = 0
+    private var spinner: Spinner? = null
+    //private var isFinished = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,17 +34,31 @@ class MainActivity : AppCompatActivity() {
         magicFill = MagicFill(mapPoland)
         coordinates = Coordinates()
 
+        spinner = findViewById(R.id.spinner)
+
+        spinner?.bringToFront()
+
+        fillDropdown(coordinates?.getListOfWojewodztw()!!)
+        spinnerSetListener()
+
         getItem()
 
         val image : ImageView = findViewById(R.id.mapPoland)
-        //zcoordinates?.testCalibration(mapPoland, scale)
+        //coordinates?.testCalibration(mapPoland, scale)
 
         image.setImageBitmap(mapPoland)
 
         image.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP) {
+
+                if (coordinates!!.isEmpty()) {
+                    val snack = Snackbar.make(findViewById(R.id.startButton),"Wybierz kolejne województwo", Snackbar.LENGTH_LONG)
+                    snack.show()
+                    return@setOnTouchListener true
+                }
+
                 val dpiPoints : List<Point> = coordinates!!.getDpiPoint(scale)
-                val startPoint = Point(event.x.toInt() / Global.granularity * Global.granularity, event.y.toInt() / Global.granularity * Global.granularity)
+                val startPoint = Point(Global.calc(event.x), Global.calc(event.y))
 
                 if (magicFill!!.isContinue(startPoint)) {
                     if(toBeResetAtNextClick) {
@@ -58,7 +72,7 @@ class MainActivity : AppCompatActivity() {
                         for (dpiPoint: Point in dpiPoints)
                             magicFill?.fill(dpiPoint, listOf(Point(-1, -1)), MyColors.green)
 
-                        coordinates?.deleteItem()
+                        coordinates!!.deleteItem()
                         getItem()
                     }
                     else {
@@ -77,11 +91,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getItem() {
         val button : Button = findViewById(R.id.startButton)
-        val item = coordinates?.getItem()
-        if (item!!.success)
-            button.text = item?.powiat
-        else
-            button.text = "Finished"
+        button.text = coordinates?.getItem()
     }
 
     fun skip(view : View) {
@@ -89,5 +99,25 @@ class MainActivity : AppCompatActivity() {
         if (toBeResetAtNextClick)
             magicFill?.recolor(MyColors.grey)
         getItem()
+    }
+
+    fun fillDropdown(keys: List<String>) {
+        val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, keys)
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner?.adapter = arrayAdapter
+    }
+
+    fun spinnerSetListener() {
+        spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(adapterView: AdapterView<*>?, view: View, i: Int, l: Long) {
+                coordinates?.setWojewodztwo(spinner?.selectedItem as String)
+
+                if (toBeResetAtNextClick)
+                    magicFill?.recolor(MyColors.grey)
+                getItem()
+            }
+
+            override fun onNothingSelected(adapterView: AdapterView<*>?) {}
+        }
     }
 }
