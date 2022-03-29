@@ -1,7 +1,7 @@
 package com.example.powiatypolski
 
 object Global {
-    val granularity = 3
+    val granularity = 1
 
     fun calc(point : Int, offset : Int) : Int {
         return ((point / 1.15 + offset / 2) / granularity).toInt() * granularity

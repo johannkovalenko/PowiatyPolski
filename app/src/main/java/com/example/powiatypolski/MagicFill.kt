@@ -2,6 +2,7 @@ package com.example.powiatypolski
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.Log
 
 class MagicFill(private var bmp: Bitmap)
 {
@@ -12,18 +13,6 @@ class MagicFill(private var bmp: Bitmap)
                 bmp.width, bmp.height)
     }
 
-
-
-    fun getBitmapPixels(bitmap: Bitmap, x: Int, y: Int, width: Int, height: Int): IntArray? {
-        val pixels = IntArray(bitmap.width * bitmap.height)
-
-        val subsetPixels = IntArray(width * height)
-        for (row in 0 until height) {
-            System.arraycopy(pixels, row * bitmap.width,
-                    subsetPixels, row * width, width)
-        }
-        return subsetPixels
-    }
     private val points : MutableList<Point> = mutableListOf()
     private val directions : Array<Array<Int>> = arrayOf(
             arrayOf(0, Global.granularity),
@@ -33,12 +22,11 @@ class MagicFill(private var bmp: Bitmap)
     )
 
     fun isContinue(startPoint: Point) : Boolean {
-
-        when (bmp.getPixel(startPoint.X, startPoint.Y)) {
-            Color.YELLOW -> return true
-            MyColors.grey -> return true
-            Color.RED -> return true
-            else -> return false
+        return when (getColor(startPoint)) {
+            Color.YELLOW -> true
+            MyColors.grey -> true
+            Color.RED -> true
+            else -> false
         }
     }
 
@@ -46,12 +34,28 @@ class MagicFill(private var bmp: Bitmap)
         for (point : Point in points)
             colorRange(point, color)
         points.clear()
+
+        setPixels()
     }
 
     private fun colorRange(point: Point, color: Int) {
-        for (i in 0 until Global.granularity - 1)
-            for (j in 0 until Global.granularity - 1)
-                bmp.setPixel(point.X + i, point.Y + j, color)
+//        for (i in 0 until Global.granularity - 1)
+//            for (j in 0 until Global.granularity - 1)
+        val index : Int = point.Y * bmp.width + point.X
+        if (index < canvas.size)
+            canvas[index] = color
+    }
+
+    private fun setPixels() {
+        bmp.setPixels(canvas, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+    }
+
+    private fun getColor(point : Point) : Int {
+        val index : Int = point.Y * bmp.width + point.X
+        return if (index >= canvas.size)
+            Color.RED
+        else
+            canvas[index]
     }
 
     fun fill(startPoint: Point, color: Int){
@@ -61,7 +65,7 @@ class MagicFill(private var bmp: Bitmap)
 
         var startIndex = 0
 
-        val startColor : Int = bmp.getPixel(startPoint.X, startPoint.Y)
+        val startColor : Int = getColor(startPoint)
 
         while (true) {
             val iterations : Int = points.size
@@ -74,7 +78,7 @@ class MagicFill(private var bmp: Bitmap)
                     if (neighbor.X < 0 || neighbor.Y  < 0)
                         break
 
-                    val neighborColor : Int = bmp.getPixel(neighbor.X, neighbor.Y)
+                    val neighborColor : Int = getColor(neighbor)
 
                     if (neighborColor == startColor) { // || neighborColor == MyColors.grey) {
                         colorRange(neighbor, color)
@@ -90,6 +94,8 @@ class MagicFill(private var bmp: Bitmap)
 
         if (color == MyColors.green)
             points.clear()
+
+        setPixels()
     }
 
     fun check(startPoint: Point, correctPoints: List<Point>, color: Int) : Boolean{
@@ -101,7 +107,7 @@ class MagicFill(private var bmp: Bitmap)
 
         var startIndex = 0
 
-        val startColor : Int = bmp.getPixel(startPoint.X, startPoint.Y)
+        val startColor : Int = getColor(startPoint)
 
         while (true) {
             val iterations : Int = points.size
@@ -121,7 +127,7 @@ class MagicFill(private var bmp: Bitmap)
                     if (neighbor.X < 0 || neighbor.Y  < 0)
                         break
 
-                    val neighborColor : Int = bmp.getPixel(neighbor.X, neighbor.Y)
+                    val neighborColor : Int = getColor(neighbor)
 
                     if (neighborColor == startColor) {
                         colorRange(neighbor, color)
@@ -138,6 +144,7 @@ class MagicFill(private var bmp: Bitmap)
         if (color == MyColors.green)
             points.clear()
 
+        setPixels()
         return result
     }
 }

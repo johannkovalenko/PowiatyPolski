@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     private var toBeResetAtNextClick = false
     private var magicFill : MagicFill? = null
     private var spinner: Spinner? = null
+    private var selectedWojewodztwo = ""
     //private var isFinished = false
 
     @SuppressLint("ClickableViewAccessibility")
@@ -52,7 +53,11 @@ class MainActivity : AppCompatActivity() {
             if (event.action == MotionEvent.ACTION_UP) {
 
                 if (coordinates!!.isEmpty()) {
-                    val snack = Snackbar.make(findViewById(R.id.startButton),"Wybierz kolejne województwo", Snackbar.LENGTH_LONG)
+                    val snack = Snackbar.make(findViewById(R.id.startButton),"Województwo $selectedWojewodztwo jest rozwiązane.",Snackbar.LENGTH_LONG)
+                    snack.setAction("Zresetować je?") {
+                        coordinates!!.resetWojewodztwo(magicFill!!)
+                        getItem()
+                    }
                     snack.show()
                     return@setOnTouchListener true
                 }
@@ -102,16 +107,17 @@ class MainActivity : AppCompatActivity() {
         getItem()
     }
 
-    fun fillDropdown(keys: List<String>) {
+    private fun fillDropdown(keys: List<String>) {
         val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, keys)
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner?.adapter = arrayAdapter
     }
 
-    fun spinnerSetListener() {
+    private fun spinnerSetListener() {
         spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(adapterView: AdapterView<*>?, view: View, i: Int, l: Long) {
-                coordinates?.setWojewodztwo(spinner?.selectedItem as String)
+                selectedWojewodztwo = spinner?.selectedItem as String
+                coordinates!!.setWojewodztwo(selectedWojewodztwo)
 
                 if (toBeResetAtNextClick)
                     magicFill?.recolor(MyColors.grey)
