@@ -94,8 +94,8 @@ class Coordinates
 
         for (point : Point in coordinates[wojewodztwo]!![shuffled[this.wojewodztwo]!![pos]]!!.coordinates) {
             val offset: Point = coordinates[wojewodztwo]!![shuffled[this.wojewodztwo]!![pos]]!!.offset
-            val x : Int = Global.calc(point.X, offset.X)  //((point.X / scale).toInt() + offset.X) / Global.granularity * Global.granularity
-            val y : Int = Global.calc(point.Y, offset.Y)  //((point.Y / scale).toInt() + offset.Y) / Global.granularity * Global.granularity
+            val x : Int = Global.calc(point.X, offset.X)
+            val y : Int = Global.calc(point.Y, offset.Y)
             points.add(Point(x, y))
         }
 

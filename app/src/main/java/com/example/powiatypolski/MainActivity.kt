@@ -62,21 +62,22 @@ class MainActivity : AppCompatActivity() {
 
                 if (magicFill!!.isContinue(startPoint)) {
                     if(toBeResetAtNextClick) {
-
                         magicFill?.recolor(MyColors.grey)
                         toBeResetAtNextClick = false
                     }
-                    val result: Boolean = magicFill!!.fill(startPoint, dpiPoints, Color.YELLOW)
+                    val result: Boolean = magicFill!!.check(startPoint, dpiPoints, Color.YELLOW)
+
+                    magicFill!!.recolor(MyColors.grey)
 
                     if (result) {
                         for (dpiPoint: Point in dpiPoints)
-                            magicFill?.fill(dpiPoint, listOf(Point(-1, -1)), MyColors.green)
+                            magicFill?.fill(dpiPoint, MyColors.green)
 
                         coordinates!!.deleteItem()
                         getItem()
                     }
                     else {
-                        magicFill?.fill(startPoint, listOf(Point(-1, -1)), Color.RED)
+                        magicFill?.fill(startPoint, Color.RED)
                         toBeResetAtNextClick = true
                     }
 
