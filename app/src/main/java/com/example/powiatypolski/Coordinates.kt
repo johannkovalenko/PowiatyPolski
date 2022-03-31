@@ -3,33 +3,32 @@ package com.example.powiatypolski
 import android.graphics.Bitmap
 import android.graphics.Color
 import com.example.powiatypolski.input.Wojewodztwa
-import com.google.android.material.snackbar.Snackbar
 
 class Coordinates
 {
     private val coordinates : Map<String, Map<String, Data>> = mapOf(
             "małopolskie" to Wojewodztwa.Malopolska(),
-            "podkarpackie" to Wojewodztwa.Podkarpackie() ,
-            "świętokrzyskie" to Wojewodztwa.Świętokrzyskie(),
-            "śląskie" to Wojewodztwa.Śląskie(),
-            "opolskie" to Wojewodztwa.Opolskie(),
             "dolnośląskie" to Wojewodztwa.Dolnośląskie(),
-            "lubuskie" to Wojewodztwa.Lubuskie(),
-            "zachodniopomorskie" to Wojewodztwa.Zachodniopomorskie(),
-            "pomorskie" to Wojewodztwa.Pomorskie(),
-            "warmińsko-mazurskie" to Wojewodztwa.Warmińsko_mazurskie(),
-            "podlaskie" to Wojewodztwa.Podlaskie(),
-            "lubelskie" to Wojewodztwa.Lubelskie(),
             "kujawsko-pomorskie" to Wojewodztwa.Kujawsko_pomorskie(),
+            "lubelskie" to Wojewodztwa.Lubelskie(),
+            "lubuskie" to Wojewodztwa.Lubuskie(),
             "łódzkie" to Wojewodztwa.Łódzkie(),
-            "wielkopolskie" to Wojewodztwa.Wielkopolskie(),
             "mazowieckie" to Wojewodztwa.Mazowieckie(),
+            "opolskie" to Wojewodztwa.Opolskie(),
+            "podkarpackie" to Wojewodztwa.Podkarpackie() ,
+            "podlaskie" to Wojewodztwa.Podlaskie(),
+            "pomorskie" to Wojewodztwa.Pomorskie(),
+            "śląskie" to Wojewodztwa.Śląskie(),
+            "świętokrzyskie" to Wojewodztwa.Świętokrzyskie(),
+            "warmińsko-mazurskie" to Wojewodztwa.Warmińsko_mazurskie(),
+            "wielkopolskie" to Wojewodztwa.Wielkopolskie(),
+            "zachodniopomorskie" to Wojewodztwa.Zachodniopomorskie(),
     )
     private val shuffled : MutableMap<String, MutableList<String>> = mutableMapOf()
     private val allPowiats : MutableMap<String, String> = mutableMapOf()
     private val allShuffled : MutableList<String>
 
-    private var pos = 0
+    private var mode = false
     private var wojewodztwo = "małopolskie"
 
     constructor()
@@ -46,13 +45,16 @@ class Coordinates
 
     fun getListOfWojewodztw() : List<String> {
         val keys : MutableList<String> = coordinates.keys.toMutableList()
-        keys.add("Cala Polska")
+        keys.add("Cała Polska")
         return keys
+    }
+
+    fun setMode(mode : Boolean) {
+        this.mode = mode
     }
 
     fun setWojewodztwo(wojewodztwo : String) {
         this.wojewodztwo = wojewodztwo
-        pos = 0
     }
 
     fun resetWojewodztwo(magicFill: MagicFill) {
@@ -61,58 +63,93 @@ class Coordinates
                 magicFill.fill(Point(Global.calc(point.X, powiat.offset.X), Global.calc(point.Y, powiat.offset.Y)), MyColors.grey)
 
         shuffled[this.wojewodztwo] = coordinates[this.wojewodztwo]!!.keys.shuffled().toMutableList()
+        allShuffled.addAll(coordinates[this.wojewodztwo]!!.keys.toMutableList())
+        allShuffled.shuffle()
     }
 
 
     fun getItem() : String{
-        if (this.wojewodztwo == "Cala Polska") {
-            if (allShuffled.isEmpty())
-                return "Finished"
 
-            if (pos >= allShuffled.size)
-                pos = 0
-
-            return allShuffled[pos]
-        }
-        else {
-            if (shuffled[this.wojewodztwo]!!.isEmpty())
-                return "Finished"
-
-            if (pos >= shuffled[this.wojewodztwo]!!.size)
-                pos = 0
-
-            return shuffled[this.wojewodztwo]!![pos]
+        if (this.wojewodztwo == "Cała Polska") {
+            return if (allShuffled.isEmpty())
+                "Finished"
+            else {
+                val powiat = allShuffled.first()
+                val wojewodztwo = allPowiats[powiat]!!
+                val sign = coordinates[wojewodztwo]!![powiat]!!.code
+                if (!mode)
+                    "Powiat $powiat"
+                else
+                    "Powiat $sign"
+            }
+        } else {
+            return if (shuffled[this.wojewodztwo]!!.isEmpty())
+                "Finished"
+            else {
+                val powiat = shuffled[this.wojewodztwo]!!.first()
+                val sign = coordinates[this.wojewodztwo]!![powiat]!!.code
+                if (!mode)
+                    "Powiat $powiat"
+                else
+                    "Powiat $sign"
+            }
         }
     }
 
     fun deleteItem() {
-        if (this.wojewodztwo == "Cala Polska") {
-            //shuffled[allShuffled[]]!!.remove(shuffled[this.wojewodztwo]!![pos])
+        if (this.wojewodztwo == "Cała Polska") {
+            val currentPowiat : String = allShuffled.first()
+            val currentWojewodztwo : String = allPowiats[currentPowiat]!!
+
+            allShuffled.remove(currentPowiat)
+            shuffled[currentWojewodztwo]!!.remove(currentPowiat)
         }
         else {
-            allShuffled.remove(shuffled[this.wojewodztwo]!![pos])
-            shuffled[this.wojewodztwo]!!.remove(shuffled[this.wojewodztwo]!![pos])
+            val currentPowiat : String = shuffled[this.wojewodztwo]!!.first()
+            allShuffled.remove(currentPowiat)
+            shuffled[this.wojewodztwo]!!.remove(currentPowiat)
         }
-
     }
 
     fun skip() {
-        pos++
+        if (isEmpty())
+            return
 
-        if (pos >= shuffled[this.wojewodztwo]!!.size)
-            pos = 0
+        if (this.wojewodztwo == "Cała Polska") {
+            val currentPowiat : String = allShuffled.first()
+            allShuffled.remove(currentPowiat)
+            allShuffled.add(currentPowiat)
+        }
+        else {
+            val currentPowiat : String = shuffled[this.wojewodztwo]!!.first()
+            shuffled[this.wojewodztwo]!!.remove(currentPowiat)
+            shuffled[this.wojewodztwo]!!.add(currentPowiat)
+        }
     }
 
     fun isEmpty() : Boolean{
-        return shuffled[this.wojewodztwo]!!.isEmpty()
+        return if (this.wojewodztwo == "Cała Polska")
+            allShuffled.isEmpty()
+        else
+            shuffled[this.wojewodztwo]!!.isEmpty()
     }
 
-    fun getDpiPoint(scale : Float) : MutableList<Point>{
+    fun getDpiPoint() : MutableList<Point>{
 
         val points : MutableList<Point> = mutableListOf()
 
-        for (point : Point in coordinates[wojewodztwo]!![shuffled[this.wojewodztwo]!![pos]]!!.coordinates) {
-            val offset: Point = coordinates[wojewodztwo]!![shuffled[this.wojewodztwo]!![pos]]!!.offset
+        val currentPowiat = if (this.wojewodztwo == "Cała Polska")
+            allShuffled.first()
+        else
+            shuffled[this.wojewodztwo]!!.first()
+
+        val currentWojewodztwo = if (this.wojewodztwo == "Cała Polska")
+            allPowiats[currentPowiat]!!
+        else
+            this.wojewodztwo
+
+        for (point : Point in coordinates[currentWojewodztwo]!![currentPowiat]!!.coordinates) {
+            val offset: Point = coordinates[currentWojewodztwo]!![currentPowiat]!!.offset
             val x : Int = Global.calc(point.X, offset.X)
             val y : Int = Global.calc(point.Y, offset.Y)
             points.add(Point(x, y))
