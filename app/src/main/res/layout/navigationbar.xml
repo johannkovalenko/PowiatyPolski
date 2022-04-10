@@ -1,0 +1,74 @@
+<com.google.android.material.navigation.NavigationView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/leftMenu"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:layout_marginTop="40dp"
+    android:clipToPadding="false"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/purple_200"
+            android:spinnerMode="dialog" />
+
+        <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton android:id="@+id/powiatname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nazwa powiatu"
+                android:onClick="onRadioButtonClicked"/>
+            <RadioButton android:id="@+id/powiatlicenseplate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tablica Rejestracyjna"
+                android:onClick="onRadioButtonClicked"/>
+            <RadioButton android:id="@+id/powiatcapital"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stolica"
+                android:onClick="onRadioButtonClicked"/>
+        </RadioGroup>
+
+        <Switch
+            android:id="@+id/allowSkip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pominięcie dozwolone"
+            android:checked="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp" />
+
+        <Switch
+            android:id="@+id/hideCorrectlySolved"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Odznaczyć dobrze rozwiązane powiaty"
+            android:checked="false"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp" />
+
+        <Switch
+            android:id="@+id/moveIfFalse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wstawić element do końca kolejki przy pierwszej niedprawidłowej probie"
+            android:checked="false"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+</com.google.android.material.navigation.NavigationView>

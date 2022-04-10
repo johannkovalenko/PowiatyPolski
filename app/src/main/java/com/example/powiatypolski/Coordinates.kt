@@ -2,6 +2,7 @@ package com.example.powiatypolski
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.Log
 import com.example.powiatypolski.input.Wojewodztwa
 
 class Coordinates
@@ -28,7 +29,7 @@ class Coordinates
     private val allPowiats : MutableMap<String, String> = mutableMapOf()
     private val allShuffled : MutableList<String>
 
-    private var mode = false
+    private var mode : CheckMode = CheckMode.NAME
     private var wojewodztwo = "małopolskie"
 
     constructor()
@@ -43,13 +44,25 @@ class Coordinates
         allShuffled = allPowiats.keys.shuffled().toMutableList()
     }
 
+    fun incrementWrong() {
+        if (this.wojewodztwo == "Cała Polska") {
+            val powiat = allShuffled.first()
+            val wojewodztwo = allPowiats[powiat]!!
+            coordinates[wojewodztwo]!![powiat]!!.wrongCounter++
+        }
+        else {
+            val powiat = shuffled[this.wojewodztwo]!!.first()
+            coordinates[this.wojewodztwo]!![powiat]!!.wrongCounter++
+        }
+    }
+
     fun getListOfWojewodztw() : List<String> {
         val keys : MutableList<String> = coordinates.keys.toMutableList()
         keys.add("Cała Polska")
         return keys
     }
 
-    fun setMode(mode : Boolean) {
+    fun setMode(mode : CheckMode) {
         this.mode = mode
     }
 
@@ -58,10 +71,17 @@ class Coordinates
     }
 
     fun resetWojewodztwo(magicFill: MagicFill) {
-        for (powiat: Data in coordinates[wojewodztwo]!!.values)
-            for (point: Point in powiat.coordinates)
-                magicFill.fill(Point(Global.calc(point.X, powiat.offset.X), Global.calc(point.Y, powiat.offset.Y)), MyColors.grey)
 
+        for (powiat: Data in coordinates[this.wojewodztwo]!!.values) {
+            powiat.wrongCounter = 0
+            for (point: Point in powiat.coordinates) {
+                val offsetPoint = Point(Global.calc(point.X, powiat.offset.X), Global.calc(point.Y, powiat.offset.Y))
+                if (magicFill.doRefill(offsetPoint)) {
+                    magicFill.reset()
+                    magicFill.fill(offsetPoint, MyColors.grey)
+                }
+            }
+        }
         shuffled[this.wojewodztwo] = coordinates[this.wojewodztwo]!!.keys.shuffled().toMutableList()
         allShuffled.addAll(coordinates[this.wojewodztwo]!!.keys.toMutableList())
         allShuffled.shuffle()
@@ -77,21 +97,36 @@ class Coordinates
                 val powiat = allShuffled.first()
                 val wojewodztwo = allPowiats[powiat]!!
                 val sign = coordinates[wojewodztwo]!![powiat]!!.code
-                if (!mode)
-                    "Powiat $powiat"
-                else
-                    "Powiat $sign"
+                val capital = coordinates[wojewodztwo]!![powiat]!!.capital
+
+                when (mode) {
+                    CheckMode.NAME -> "Powiat $powiat"
+                    CheckMode.LICENSEPLATE -> "Powiat $sign"
+                    CheckMode.CAPITAL -> "$capital"
+                }
             }
         } else {
-            return if (shuffled[this.wojewodztwo]!!.isEmpty())
-                "Finished"
+            if (shuffled[this.wojewodztwo]!!.isEmpty()) {
+                var wrongCounter = 0
+                //val total = coordinates[this.wojewodztwo]!!.size
+
+                for (powiat : Data in coordinates[this.wojewodztwo]!!.values)
+                    wrongCounter += powiat.wrongCounter
+
+                return if (wrongCounter == 0)
+                    "Województwo rozwiązane bez błędów"
+                else "Województwo rozwiązane. Ilość błędów: ${wrongCounter}"
+            }
             else {
                 val powiat = shuffled[this.wojewodztwo]!!.first()
                 val sign = coordinates[this.wojewodztwo]!![powiat]!!.code
-                if (!mode)
-                    "Powiat $powiat"
-                else
-                    "Powiat $sign"
+                val capital = coordinates[wojewodztwo]!![powiat]!!.capital
+
+                return when (mode) {
+                    CheckMode.NAME -> "Powiat $powiat"
+                    CheckMode.LICENSEPLATE -> "Powiat $sign"
+                    CheckMode.CAPITAL -> "$capital"
+                }
             }
         }
     }

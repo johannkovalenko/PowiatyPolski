@@ -30,6 +30,15 @@ class MagicFill(private var bmp: Bitmap)
         }
     }
 
+    fun doRefill(startPoint: Point) : Boolean {
+        return when (getColor(startPoint)) {
+            Color.YELLOW -> true
+            MyColors.green -> true
+            Color.RED -> true
+            else -> false
+        }
+    }
+
     fun recolor(color: Int) {
         for (point : Point in points)
             colorRange(point, color)
@@ -58,12 +67,15 @@ class MagicFill(private var bmp: Bitmap)
             canvas[index]
     }
 
+    fun reset() {
+        points.clear()
+    }
+
     fun fill(startPoint: Point, color: Int){
 
-        points.clear()
-        points.add(startPoint)
+        var startIndex = points.size
 
-        var startIndex = 0
+        points.add(startPoint)
 
         val startColor : Int = getColor(startPoint)
 
@@ -92,20 +104,19 @@ class MagicFill(private var bmp: Bitmap)
             startIndex = iterations - 1
         }
 
-        if (color == MyColors.green)
-            points.clear()
-
         setPixels()
     }
 
     fun check(startPoint: Point, correctPoints: List<Point>, color: Int) : Boolean{
 
         points.clear()
+
+        var startIndex = points.size
+
         points.add(startPoint)
 
         var result = false
 
-        var startIndex = 0
 
         val startColor : Int = getColor(startPoint)
 
@@ -140,9 +151,6 @@ class MagicFill(private var bmp: Bitmap)
 
             startIndex = iterations - 1
         }
-
-        if (color == MyColors.green)
-            points.clear()
 
         setPixels()
         return result
